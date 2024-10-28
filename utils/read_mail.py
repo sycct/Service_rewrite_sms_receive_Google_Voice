@@ -61,41 +61,41 @@ class ReadGmail:
                                 pass
                             if content_type == "text/plain" and "attachment" not in content_disposition:
                                 # print text/plain emails and skip attachments
-                                message['body'] = self.email_content_replace(body)
+                                message['body'] = body
                                 temp_list.append(message)
                             elif "attachment" in content_disposition:
-                                message['body'] = self.email_content_replace(part.get_payload(decode=True))
+                                message['body'] = part.get_payload(decode=True)
                                 temp_list.append(message)
                     else:
                         # extract content type of email
                         content_type = msg.get_content_type()
                         # get the email body
                         body = msg.get_payload(decode=True).decode()
-                        message['body'] = self.email_content_replace(body)
+                        message['body'] = body
                         temp_list.append(message)
         # close the connection and logout
         mail.close()
         mail.logout()
         return temp_list
 
-    @staticmethod
-    def email_content_replace(email_content):
-        """
-        使用正则表达式匹配短信正文，并过滤掉开头的无用链接。
-        """
-        # 去除换行和多余空格
-        cleaned_content = re.sub(r'\s+', ' ', email_content.strip())
-
-        # 正则表达式匹配短信正文，忽略前面的 URL 或无关前缀
-        pattern = (
-            r'(?:https?://\S+\s*)*'  # 匹配并忽略开头的链接
-            r'([a-zA-Z\[\]0-9\u4e00-\u9fa5].*?)'  # 匹配正文的主要部分
-            r'[\.\s]*?(https?://|Google LLC|此电子邮件|Mountain View|帮助中心|HELP FORUM|support\.google)'
-        )
-
-        match = re.search(pattern, cleaned_content, re.IGNORECASE)
-
-        if match:
-            return match.group(1).strip()  # 返回匹配到的短信正文
-        else:
-            return cleaned_content  # 如果未匹配到，返回清理后的全文
+    # @staticmethod
+    # def email_content_replace(email_content):
+    #     """
+    #     使用正则表达式匹配短信正文，并过滤掉开头的无用链接。
+    #     """
+    #     # 去除换行和多余空格
+    #     cleaned_content = re.sub(r'\s+', ' ', email_content.strip())
+    #
+    #     # 正则表达式匹配短信正文，忽略前面的 URL 或无关前缀
+    #     pattern = (
+    #         r'(?:https?://\S+\s*)*'  # 匹配并忽略开头的链接
+    #         r'([a-zA-Z\[\]0-9\u4e00-\u9fa5].*?)'  # 匹配正文的主要部分
+    #         r'[\.\s]*?(https?://|Google LLC|此电子邮件|Mountain View|帮助中心|HELP FORUM|support\.google)'
+    #     )
+    #
+    #     match = re.search(pattern, cleaned_content, re.IGNORECASE)
+    #
+    #     if match:
+    #         return match.group(1).strip()  # 返回匹配到的短信正文
+    #     else:
+    #         return cleaned_content  # 如果未匹配到，返回清理后的全文
