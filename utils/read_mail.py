@@ -4,6 +4,7 @@
 import imaplib
 import email
 import os
+import re
 from email.header import decode_header
 
 
@@ -79,25 +80,22 @@ class ReadGmail:
 
     @staticmethod
     def email_content_replace(email_content):
-        # 替换无用内容
-        message_content_replace = email_content.replace('\r\n', '').replace('<https://voice.google.com>', '') \
-            .replace('Google Voice ', '')
-        message_content_index = message_content_replace.find('要回复此短信，请回复此电子邮件或访问 Google Voice。')
-        """此处过滤文本示例：
-        <https://voice.google.com>
-        Your TrafficJunky one-time code is RTW62A. If this action was not initiated
-        by you please contact our Support Team or call +1-877-467-2875.
-        您的帐号 <https://voice.google.com> 帮助中心
-        <https://support.google.com/voice#topic=1707989> 帮助论坛
-        <https://productforums.google.com/forum/#!forum/voice>
-        您收到此电子邮件，是因为您曾表示愿意接收有关短信的电子邮件通知。如果您不希望 
-        日后再收到这类电子邮件，请更新您的电子邮件通知设置
-        <https://voice.google.com/settings#messaging>。
-        Google LLC
-        1600 Amphitheatre Pkwy
-        Mountain View CA 94043 USA
         """
-        if message_content_index == -1:
-            message_content_index = message_content_replace.find('您的帐号  帮助中心')
-        message_content = message_content_replace[0:message_content_index]
-        return message_content
+        使用正则表达式匹配短信正文，并过滤掉开头的无用链接。
+        """
+        # 去除换行和多余空格
+        cleaned_content = re.sub(r'\s+', ' ', email_content.strip())
+
+        # 正则表达式匹配短信正文，忽略前面的 URL 或无关前缀
+        pattern = (
+            r'(?:https?://\S+\s*)*'  # 匹配并忽略开头的链接
+            r'([a-zA-Z\[\]0-9\u4e00-\u9fa5].*?)'  # 匹配正文的主要部分
+            r'[\.\s]*?(https?://|Google LLC|此电子邮件|Mountain View|帮助中心|HELP FORUM|support\.google)'
+        )
+
+        match = re.search(pattern, cleaned_content, re.IGNORECASE)
+
+        if match:
+            return match.group(1).strip()  # 返回匹配到的短信正文
+        else:
+            return cleaned_content  # 如果未匹配到，返回清理后的全文
