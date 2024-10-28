@@ -4,8 +4,10 @@
 import imaplib
 import email
 import os
-import re
+from imaplib import IMAP4_SSL, IMAP4
 from email.header import decode_header
+
+from config import LoggingConfig
 
 
 class ReadGmail:
@@ -17,6 +19,8 @@ class ReadGmail:
         self._smtp_port = int(os.environ.get('SMTP_SERVER_PORT'))
         # number of top emails to fetch
         self._receive_number = 10
+        logger_name = 'read google mail'
+        self._logger = LoggingConfig().init_logging(logger_name)
 
     def get_mail_client(self):
         mail = imaplib.IMAP4_SSL(self._smtp_server)
@@ -24,7 +28,11 @@ class ReadGmail:
         return mail
 
     def read_email_from_gmail(self):
-        mail = imaplib.IMAP4_SSL(self._smtp_server)
+        try:
+            mail = IMAP4_SSL(self._smtp_server)
+        except IMAP4.abort as e:
+            self._logger.error(f"连接 Gmail 出现错误，具体错误内容：{e}")
+            return False
         mail.login(self._from_mail, self._from_password)
         status, messages = mail.select("INBOX")
         # total number of emails
