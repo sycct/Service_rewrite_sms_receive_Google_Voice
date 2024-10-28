@@ -23,7 +23,10 @@ class ProcessMail:
     def process_mail_from(mail_from):
         from_str = mail_from.split('.')
         # 接收方号码
-        get_to_number = from_str[0].split('<')[1]
+        try:
+            get_to_number = from_str[0].split('<')[1]
+        except IndexError as e:
+            get_to_number = from_str[0]
         # 发送方号码
         get_from_number = from_str[1]
         return get_from_number, get_to_number
